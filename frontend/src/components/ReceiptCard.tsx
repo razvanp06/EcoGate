@@ -12,11 +12,13 @@ export default function ReceiptCard({ receipt }: Props) {
   const time = new Date(receipt.timestamp).toLocaleTimeString("en-GB");
   const compressionSaved = (100 - receipt.compression_ratio * 100).toFixed(0);
 
+  const isMini = receipt.complexity_tier === 1;
+
   const borderColor = receipt.cache_hit
     ? "border-green-500"
     : receipt.deferred
       ? "border-blue-500"
-      : receipt.model_used === "gpt-4o-mini"
+      : isMini
         ? "border-green-400"
         : "border-amber-500";
 
@@ -24,7 +26,7 @@ export default function ReceiptCard({ receipt }: Props) {
     ? "bg-green-950"
     : receipt.deferred
       ? "bg-blue-950"
-      : receipt.model_used === "gpt-4o-mini"
+      : isMini
         ? "bg-slate-800"
         : "bg-amber-950";
 
@@ -39,9 +41,7 @@ export default function ReceiptCard({ receipt }: Props) {
         ) : receipt.deferred ? (
           <Badge color="blue">DEFERRED</Badge>
         ) : (
-          <Badge
-            color={receipt.model_used === "gpt-4o-mini" ? "green" : "amber"}
-          >
+          <Badge color={isMini ? "green" : "amber"}>
             {receipt.model_used} · {receipt.region_used}
           </Badge>
         )}

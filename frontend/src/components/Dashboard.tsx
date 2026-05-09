@@ -71,20 +71,20 @@ export default function Dashboard() {
         </h1>
       </header>
 
-      <main className="flex-1 min-h-0 p-4 flex flex-col gap-4 overflow-hidden">
-        {/* ── Row 1 — Query tester (full width, top) ── */}
+      <main className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
+        {/* ── Row 1 — Query tester, grows with content, page scrolls ── */}
         <div className="shrink-0">
           <QueryTester onNewReceipt={handleNewReceipt} />
         </div>
 
-        {/* ── Row 2 — Charts (two equal columns) ── */}
-        <div className="flex-1 min-h-0 grid grid-cols-2 gap-4">
+        {/* ── Row 2 — Charts, fixed height ── */}
+        <div className="shrink-0 h-72 grid grid-cols-2 gap-4">
           <RouteBreakdown receipts={receipts} />
           <CarbonMap receipts={receipts} />
         </div>
 
-        {/* ── Row 3 — Savings counter (bottom-left) + live feed (right) ── */}
-        <div className="flex-1 min-h-0 grid grid-cols-2 gap-4">
+        {/* ── Row 3 — Savings counter + live feed, fixed height ── */}
+        <div className="shrink-0 h-64 grid grid-cols-2 gap-4">
           <SavingsCounter stats={stats} />
           <LiveFeed receipts={receipts} />
         </div>

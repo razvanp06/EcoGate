@@ -8,12 +8,15 @@ interface Props {
   receipts: GreenReceipt[];
 }
 
-// East US baseline is a fixed reference — the backend does not send it per-request.
-const EASTUS_BASELINE = 386; // gCO₂/kWh — historical average for US-MIDA-PJM
+const EASTUS_BASELINE = 386; // gCO2/kWh — fixed high-carbon baseline for comparison
+const EASTUS_LABEL = "East US";
 
 const REGION_LABELS: Record<string, string> = {
-  westeurope: "West Europe (NL)",
-  eastus: "East US",
+  westeurope:    "West Europe (NL)",
+  eastus:        "East US",
+  swedencentral: "Sweden Central",
+  northeurope:   "North Europe (IE)",
+  uksouth:       "UK South",
 };
 
 export default function CarbonMap({ receipts }: Props) {
@@ -33,12 +36,11 @@ export default function CarbonMap({ receipts }: Props) {
   }
 
   const chosenIntensity = latest.carbon_intensity;
-  const chosenRegion = latest.region_used;
-  const chosenLabel = REGION_LABELS[chosenRegion] ?? chosenRegion;
-  const westEuropeChosen = chosenRegion === "westeurope";
+  const chosenRegion    = latest.region_used;
+  const chosenLabel     = REGION_LABELS[chosenRegion] ?? chosenRegion;
+  const isEastUs        = chosenRegion === "eastus";
 
-  const rawSavingsPct = (1 - chosenIntensity / EASTUS_BASELINE) * 100;
-  const savingsPct = Math.max(0, rawSavingsPct).toFixed(0);
+  const savingsPct   = Math.max(0, (1 - chosenIntensity / EASTUS_BASELINE) * 100).toFixed(0);
   const chosenBarPct = Math.min((chosenIntensity / EASTUS_BASELINE) * 100, 100);
 
   return (
@@ -47,47 +49,36 @@ export default function CarbonMap({ receipts }: Props) {
         Carbon Intensity by Region
       </p>
 
-      {/* West Europe */}
+      {/* Chosen region — always SELECTED */}
       <div className="flex flex-col gap-1">
         <div className="flex justify-between text-sm">
-          <span className="text-green-400 font-medium">West Europe (NL)</span>
-          <span className="text-green-400 font-mono">
-            {westEuropeChosen ? `${chosenIntensity} gCO₂/kWh` : "— gCO₂/kWh"}
-          </span>
+          <span className="text-green-400 font-medium">{chosenLabel}</span>
+          <span className="text-green-400 font-mono">{chosenIntensity} gCO2/kWh</span>
         </div>
         <div className="w-full bg-slate-700 rounded-full h-4 overflow-hidden">
           <div
             className="bg-green-500 h-full rounded-full transition-all duration-500"
-            style={{ width: westEuropeChosen ? `${chosenBarPct}%` : "0%" }}
+            style={{ width: `${chosenBarPct}%` }}
           />
         </div>
-        <p className="text-green-500 text-xs font-semibold">
-          {westEuropeChosen ? "SELECTED ✓" : "AVOIDED"}
-        </p>
+        <p className="text-green-500 text-xs font-semibold">SELECTED</p>
       </div>
 
-      {/* East US */}
-      <div className="flex flex-col gap-1">
-        <div className="flex justify-between text-sm">
-          <span className="text-amber-400 font-medium">East US</span>
-          <span className="text-amber-400 font-mono">
-            {!westEuropeChosen
-              ? `${chosenIntensity} gCO₂/kWh`
-              : `${EASTUS_BASELINE} gCO₂/kWh`}
-          </span>
+      {/* East US baseline — always AVOIDED (hidden if chosen IS eastus) */}
+      {!isEastUs && (
+        <div className="flex flex-col gap-1">
+          <div className="flex justify-between text-sm">
+            <span className="text-amber-400 font-medium">{EASTUS_LABEL}</span>
+            <span className="text-amber-400 font-mono">{EASTUS_BASELINE} gCO2/kWh</span>
+          </div>
+          <div className="w-full bg-slate-700 rounded-full h-4 overflow-hidden">
+            <div className="bg-amber-500 h-full rounded-full w-full" />
+          </div>
+          <p className="text-amber-500 text-xs font-semibold">AVOIDED</p>
         </div>
-        <div className="w-full bg-slate-700 rounded-full h-4 overflow-hidden">
-          <div
-            className="bg-amber-500 h-full rounded-full transition-all duration-500"
-            style={{ width: westEuropeChosen ? "100%" : `${chosenBarPct}%` }}
-          />
-        </div>
-        <p className="text-amber-500 text-xs font-semibold">
-          {westEuropeChosen ? "AVOIDED" : "SELECTED ✓"}
-        </p>
-      </div>
+      )}
 
-      <p className="text-center text-slate-300 text-sm font-medium">
+      <p className="text-center text-slate-300 text-sm font-medium mt-auto">
         Routing to {chosenLabel} saves{" "}
         <span className="text-green-400 font-bold">{savingsPct}%</span> carbon
       </p>

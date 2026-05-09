@@ -40,7 +40,7 @@ export default function QueryTester({ onNewReceipt }: Props) {
   }
 
   return (
-    <div className="h-full rounded-xl border-2 border-blue-500 bg-slate-800 p-4 flex flex-col gap-3 overflow-y-auto">
+    <div className="rounded-xl border-2 border-blue-500 bg-slate-800 p-4 flex flex-col gap-3">
       <div className="flex items-center justify-between">
         <p className="text-slate-300 text-sm font-semibold uppercase tracking-wide">
           Test EcoGateway
@@ -73,6 +73,13 @@ export default function QueryTester({ onNewReceipt }: Props) {
           placeholder="Enter your prompt here…"
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              if (!loading && prompt.trim())
+                handleSubmit(e as unknown as React.FormEvent);
+            }
+          }}
         />
         <button
           type="submit"

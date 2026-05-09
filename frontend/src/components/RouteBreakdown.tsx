@@ -27,10 +27,10 @@ export default function RouteBreakdown({ receipts }: Props) {
   const cacheHits = receipts.filter((r) => r.cache_hit).length;
   const deferredCount = receipts.filter((r) => r.deferred).length;
   const miniCount = receipts.filter(
-    (r) => !r.cache_hit && !r.deferred && r.model_used === "gpt-4o-mini",
+    (r) => !r.cache_hit && !r.deferred && r.complexity_tier === 1,
   ).length;
   const fullCount = receipts.filter(
-    (r) => !r.cache_hit && !r.deferred && r.model_used === "gpt-4o",
+    (r) => !r.cache_hit && !r.deferred && r.complexity_tier === 2,
   ).length;
 
   const data = [
