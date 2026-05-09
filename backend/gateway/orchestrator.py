@@ -50,7 +50,7 @@ def _call_model(
     completion = client.chat.completions.create(
         model=model,
         messages=messages,
-        max_tokens=max_tokens,
+        max_completion_tokens=max_tokens,
     )
     text = completion.choices[0].message.content or ""
     total_tokens = completion.usage.total_tokens if completion.usage else len(_encoder.encode(text))
