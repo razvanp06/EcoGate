@@ -14,7 +14,7 @@ TRAINING_DATA_PATH = Path(__file__).parent / "training_data.json"
 TIER_2_MARGIN = 0.0
 
 MODEL_FOR_TIER = {
-    1: "gpt-4o-mini",
+    1: "o4-mini",
     2: "gpt-4o",
 }
 
