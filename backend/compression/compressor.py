@@ -11,7 +11,6 @@ import sys
 import os
 import re
 from .tokenizer import count_tokens
-from dataclasses import dataclass
 from shared.models import CompressionResult
 
 MIN_COMPRESSION_CHARS = 50

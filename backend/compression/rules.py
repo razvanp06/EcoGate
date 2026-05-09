@@ -42,22 +42,12 @@ EN_FILLER_DELETIONS = [
 	r"\bliterally\b",
 	r"\bactually\b",
 	r"\bquite frankly\b",
-	r"\bI (just )?wanted to (ask you|mention|bring up|flag)[,.]?\s*",
-	r"\band I think (this is|it is|it's) (quite |very )?(important to note|worth noting|worth mentioning)[,.]?\s*(that\s+)?",
-	r"\bI think (this is|it is|it's) (quite |very )?(important to note|worth noting|worth mentioning)[,.]?\s*(that\s+)?",
 ]
 
 RO_FILLER_DELETIONS = [
 	r"\bva rog sa retineti ca\b",
 	r"\bte rog sa retii ca\b",
 	r"\bvreau sa retineti ca\b",
-	r"\bvreau sa retii ca\b",
-	r"\bas vrea sa retii ca\b",
-	r"\bas vrea sa retineti ca\b",
-	r"\bam dori sa retii ca\b",
-	r"\bam dori sa retineti ca\b",
-	r"\btin sa mentionez ca\b",
-	r"\btin sa precizez ca\b",
 	r"\beste important sa mentionam ca\b",
 	r"\beste important de mentionat ca\b",
 	r"\btrebuie mentionat ca\b",
@@ -299,9 +289,6 @@ RO_OPENING_PATTERNS = [
 	r"^sper ca (esti|sunteti) bine[.!,]?\s*",
 	r"^sper ca (te|va) gaseste (acest mesaj )?bine[.!,]?\s*",
 	r"^sper ca ai (avut )?o (zi|saptamana) (buna|frumoasa)[.!,]?\s*",
-	r"^as aprecia (mult |enorm |foarte mult |tare mult )?(daca|ca)\b[^.!?]*[.!?]\s*",
-	r"^as dori (mult |enorm |foarte mult )?(daca|ca|sa)\b[^.!?]*[.!?]\s*",
-	r"^te[-\s]?as ruga (mult |frumos )?(daca|ca|sa)\b[^.!?]*[.!?]\s*",
 	r"^multumesc (mult |anticipat |mult anticipat |frumos )?(pentru (ajutor|timp))?[.!,]?\s*",
 	r"^(scuze|imi (cer|pare) rau)( pentru deranj)?[.!,]?\s*",
 	r"^(o |doar o )?(scurta |rapida )?(intrebare|nelamurire)[.!,:]?\s*",
@@ -354,20 +341,17 @@ def remove_redundant_politeness(text: str) -> str:
 	return text
 
 
-_LIST_INTRO = re.compile(
-	r'\b(please\s+)?(do\s+)?the\s+following(\s+things?|\s+steps?|\s+items?)?\s*:',
-	re.IGNORECASE,
-)
-
 def compress_lists(text: str) -> str:
-	return _LIST_INTRO.sub('Do:', text)
+	def dedup_comma_list(m: re.Match) -> str:
+		items = [i.strip() for i in m.group(0).split(',')]
+		seen: list[str] = []
+		for item in items:
+			if item.lower() not in [s.lower() for s in seen]:
+				seen.append(item)
+		return ', '.join(seen)
 
-
-def _jaccard(a: str, b: str) -> float:
-	sa, sb = set(a.split()), set(b.split())
-	if not sa or not sb:
-		return 0.0
-	return len(sa & sb) / len(sa | sb)
+	text = re.sub(r'\b\w[\w ]*(?:,\s*\w[\w ]*){2,}', dedup_comma_list, text)
+	return text
 
 
 def deduplicate_context(text: str) -> str:
@@ -375,21 +359,20 @@ def deduplicate_context(text: str) -> str:
 	seen: list[str] = []
 	result: list[str] = []
 	for sentence in sentences:
-		normalized = sentence.lower().strip()
-		if not any(_jaccard(normalized, s) > 0.85 for s in seen):
-			result.append(sentence)
+		normalized = re.sub(r'\s+', ' ', sentence.lower().strip())
+		if normalized not in seen:
 			seen.append(normalized)
+			result.append(sentence)
 	return ' '.join(result)
 
 
 def fix_artifacts(text: str) -> str:
-	# Virgula orfana dupa punct: ". , Cuvant" → ". Cuvant"
-	text = re.sub(r'([.!?] ),\s*', r'\1', text)
-	# Virgula orfana la inceput de string: ", Cuvant" → "Cuvant"
 	text = re.sub(r'^[,;]\s*', '', text)
-	# Capitalizeaza prima litera dupa punct/semn de exclamare/intrebare
+	text = re.sub(r'\s*[,;]$', '', text)
+	text = re.sub(r'([,;.])\s*\1+', r'\1', text)
+	text = re.sub(r',\s*,', ',', text)
+	text = re.sub(r'\.\s*\.', '.', text)
 	text = re.sub(r'([.!?]\s+)([a-z])', lambda m: m.group(1) + m.group(2).upper(), text)
-	# Capitalizeaza prima litera din tot textul
 	if text and text[0].islower():
 		text = text[0].upper() + text[1:]
 	return text
