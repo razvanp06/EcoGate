@@ -8,15 +8,15 @@ logger = logging.getLogger(__name__)
 
 # Azure region → Electricity Maps zone code
 REGION_TO_ZONE = {
-    "westeurope": "NL",         # Netherlands grid
-    "eastus": "US-MIDA-PJM",    # US East PJM grid
+    "swedencentral": "SE",      # Sweden grid (mostly hydro + nuclear)
+    "eastus2": "US-MIDA-PJM",   # US East 2 (Virginia) on the PJM grid
 }
 
 # Historical-average gCO₂/kWh, used when the API is unreachable or unkeyed.
 # Values from electricitymaps.com 2023–2024 yearly averages.
 FALLBACK_CARBON_INTENSITY = {
-    "westeurope": 150.0,
-    "eastus": 386.0,
+    "swedencentral": 40.0,      # Sweden grid is one of the cleanest in Europe
+    "eastus2": 386.0,           # PJM grid, gas + coal heavy
 }
 
 _API_BASE = "https://api.electricitymap.org/v3/carbon-intensity/latest"

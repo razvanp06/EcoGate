@@ -9,7 +9,7 @@ from scheduler.complexity_router import classify_complexity, MODEL_FOR_TIER
 from scheduler.carbon_client import get_carbon_intensity, FALLBACK_CARBON_INTENSITY
 from scheduler.deferred_queue import enqueue
 
-AVAILABLE_REGIONS = ["westeurope", "eastus"]
+AVAILABLE_REGIONS = ["swedencentral", "eastus2"]
 
 # Defer batch jobs when grid is above this carbon intensity (gCO₂/kWh)
 DEFER_THRESHOLD_GCO2_KWH = 250.0
@@ -18,13 +18,13 @@ DEFER_THRESHOLD_GCO2_KWH = 250.0
 DEFAULT_DEFER_HOURS = 2
 
 REGION_CONFIG = {
-    "westeurope": {
-        "endpoint_env": "AZURE_OAI_WESTEUROPE_ENDPOINT",
-        "key_env": "AZURE_OAI_WESTEUROPE_KEY",
+    "swedencentral": {
+        "endpoint_env": "SWEDEN_ENDPOINT",
+        "key_env": "SWEDEN_KEY",
     },
-    "eastus": {
-        "endpoint_env": "AZURE_OAI_EASTUS_ENDPOINT",
-        "key_env": "AZURE_OAI_EASTUS_KEY",
+    "eastus2": {
+        "endpoint_env": "EASTUS2_ENDPOINT",
+        "key_env": "EASTUS2_KEY",
     },
 }
 
@@ -86,7 +86,7 @@ def get_routing_decision(prompt: str, urgency: str) -> RoutingDecision:
     best_region = min(intensities, key=intensities.get)
     best_intensity = intensities[best_region]
     baseline_intensity = intensities.get(
-        "eastus", FALLBACK_CARBON_INTENSITY["eastus"]
+        "eastus2", FALLBACK_CARBON_INTENSITY["eastus2"]
     )
 
     config = REGION_CONFIG[best_region]
