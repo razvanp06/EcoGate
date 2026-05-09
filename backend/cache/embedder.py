@@ -26,8 +26,8 @@ logger = logging.getLogger(__name__)
 # Cheile Azure NU se pun niciodata hardcodat in cod — sunt in env vars.
 # -------------------------------------------------------------------
 _client = AzureOpenAI(
-    azure_endpoint=os.environ.get("AZURE_OAI_WESTEUROPE_ENDPOINT", ""),
-    api_key=os.environ.get("AZURE_OAI_WESTEUROPE_KEY", ""),
+    azure_endpoint=os.environ.get("SWEDEN_ENDPOINT", ""),
+    api_key=os.environ.get("SWEDEN_KEY", ""),
     api_version="2024-02-01",
 )
 
