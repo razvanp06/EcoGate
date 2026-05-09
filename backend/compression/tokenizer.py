@@ -1,6 +1,6 @@
 import tiktoken
 
-_encoder = tiktoken.get_encoding("clk100k_base")
+_encoder = tiktoken.get_encoding("cl100k_base")
 
-def count_token(text: str) -> int:
-	return len(_encoder.encode(text))
+def count_tokens(text: str) -> int:
+    return len(_encoder.encode(text))

@@ -42,6 +42,9 @@ EN_FILLER_DELETIONS = [
 	r"\bliterally\b",
 	r"\bactually\b",
 	r"\bquite frankly\b",
+	r"\bI (just )?wanted to (ask you|mention|bring up|flag)[,.]?\s*",
+	r"\band I think (this is|it is|it's) (quite |very )?(important to note|worth noting|worth mentioning)[,.]?\s*(that\s+)?",
+	r"\bI think (this is|it is|it's) (quite |very )?(important to note|worth noting|worth mentioning)[,.]?\s*(that\s+)?",
 ]
 
 RO_FILLER_DELETIONS = [
@@ -348,6 +351,47 @@ def remove_redundant_politeness(text: str) -> str:
 		text = re.sub(pattern, '', text, flags=re.IGNORECASE)
 	for pattern in ALL_CLOSINGS:
 		text = re.sub(pattern, '', text, flags=re.IGNORECASE)
+	return text
+
+
+_LIST_INTRO = re.compile(
+	r'\b(please\s+)?(do\s+)?the\s+following(\s+things?|\s+steps?|\s+items?)?\s*:',
+	re.IGNORECASE,
+)
+
+def compress_lists(text: str) -> str:
+	return _LIST_INTRO.sub('Do:', text)
+
+
+def _jaccard(a: str, b: str) -> float:
+	sa, sb = set(a.split()), set(b.split())
+	if not sa or not sb:
+		return 0.0
+	return len(sa & sb) / len(sa | sb)
+
+
+def deduplicate_context(text: str) -> str:
+	sentences = re.split(r'(?<=[.!?])\s+', text)
+	seen: list[str] = []
+	result: list[str] = []
+	for sentence in sentences:
+		normalized = sentence.lower().strip()
+		if not any(_jaccard(normalized, s) > 0.85 for s in seen):
+			result.append(sentence)
+			seen.append(normalized)
+	return ' '.join(result)
+
+
+def fix_artifacts(text: str) -> str:
+	# Virgula orfana dupa punct: ". , Cuvant" → ". Cuvant"
+	text = re.sub(r'([.!?] ),\s*', r'\1', text)
+	# Virgula orfana la inceput de string: ", Cuvant" → "Cuvant"
+	text = re.sub(r'^[,;]\s*', '', text)
+	# Capitalizeaza prima litera dupa punct/semn de exclamare/intrebare
+	text = re.sub(r'([.!?]\s+)([a-z])', lambda m: m.group(1) + m.group(2).upper(), text)
+	# Capitalizeaza prima litera din tot textul
+	if text and text[0].islower():
+		text = text[0].upper() + text[1:]
 	return text
 
 
