@@ -2,11 +2,14 @@ import os
 
 
 class Config:
-    AZURE_OAI_WESTEUROPE_ENDPOINT: str = os.environ.get("AZURE_OAI_WESTEUROPE_ENDPOINT", "")
-    AZURE_OAI_WESTEUROPE_KEY: str = os.environ.get("AZURE_OAI_WESTEUROPE_KEY", "")
-    AZURE_OAI_EASTUS_ENDPOINT: str = os.environ.get("AZURE_OAI_EASTUS_ENDPOINT", "")
-    AZURE_OAI_EASTUS_KEY: str = os.environ.get("AZURE_OAI_EASTUS_KEY", "")
-    AZURE_OAI_API_VERSION: str = os.environ.get("AZURE_OAI_API_VERSION", "2024-02-01")
+    # Sweden Central — clean region (~27 gCO₂/kWh, hydro + nuclear)
+    SWEDEN_ENDPOINT: str = os.environ.get("SWEDEN_ENDPOINT", "")
+    SWEDEN_KEY: str = os.environ.get("SWEDEN_KEY", "")
+
+    # East US 2 — baseline/dirty region (~380 gCO₂/kWh)
+    EASTUS2_ENDPOINT: str = os.environ.get("EASTUS2_ENDPOINT", "")
+    EASTUS2_KEY: str = os.environ.get("EASTUS2_KEY", "")
+
     ELECTRICITY_MAPS_KEY: str = os.environ.get("ELECTRICITY_MAPS_KEY", "")
 
     PINECONE_API_KEY: str = os.environ.get("PINECONE_API_KEY", "")
@@ -14,9 +17,5 @@ class Config:
 
     @classmethod
     def validate(cls) -> list[str]:
-        """Returns a list of missing required env vars. Empty = all good."""
-        required = [
-            "AZURE_OAI_WESTEUROPE_ENDPOINT",
-            "AZURE_OAI_WESTEUROPE_KEY",
-        ]
+        required = ["SWEDEN_ENDPOINT", "SWEDEN_KEY", "EASTUS2_ENDPOINT", "EASTUS2_KEY"]
         return [k for k in required if not os.environ.get(k)]

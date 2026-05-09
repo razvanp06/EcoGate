@@ -14,18 +14,15 @@ from shared.models import (
 # Source: Patterson et al. 2021 "Carbon emissions and large neural network training"
 # and ElectricityMaps / ML CO₂ Impact calculator cross-references.
 MODEL_ENERGY_FACTORS: dict[str, float] = {
-    "gpt-4o":      0.00090,
-    "gpt-4o-mini": 0.00009,
+    "gpt-4o":    0.00090,
+    "o4-mini":   0.00009,
 }
-# Fallback for unknown model names
 _DEFAULT_ENERGY_FACTOR = 0.00090
 
-# Amortised hardware manufacturing carbon per request (kgCO₂ → gCO₂)
-EMBODIED_CARBON_G = 0.001   # 0.000001 kgCO₂ = 0.001 gCO₂
+EMBODIED_CARBON_G = 0.001
 
-# Baseline: worst-case scenario used to calculate savings
-BASELINE_MODEL  = "gpt-4o"
-BASELINE_REGION_INTENSITY = 386.0   # gCO₂/kWh — US East (PJM) historical average
+BASELINE_MODEL = "gpt-4o"
+BASELINE_REGION_INTENSITY = 380.0   # gCO₂/kWh — East US 2 (PJM) historical average
 
 
 def _energy_kwh(model: str, total_tokens: int) -> float:

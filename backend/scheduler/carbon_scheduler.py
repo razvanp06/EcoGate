@@ -21,10 +21,14 @@ REGION_CONFIG = {
     "swedencentral": {
         "endpoint_env": "SWEDEN_ENDPOINT",
         "key_env": "SWEDEN_KEY",
+        "electricity_maps_zone": "SE",
+        "fallback_carbon": 27.0,
     },
     "eastus2": {
         "endpoint_env": "EASTUS2_ENDPOINT",
         "key_env": "EASTUS2_KEY",
+        "electricity_maps_zone": "US-MIDA-PJM",
+        "fallback_carbon": 380.0,
     },
 }
 

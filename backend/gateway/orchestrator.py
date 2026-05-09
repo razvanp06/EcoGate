@@ -5,7 +5,7 @@ import uuid
 from typing import Optional
 
 import tiktoken
-from openai import AzureOpenAI
+from openai import OpenAI
 
 from shared.models import GatewayRequest, GatewayResponse, GreenReceipt
 from shared.config import Config
@@ -20,15 +20,14 @@ logger = logging.getLogger(__name__)
 _encoder = tiktoken.get_encoding("cl100k_base")
 
 # One client per region, created once at module load and reused across requests.
-_clients: dict[str, AzureOpenAI] = {}
+_clients: dict[str, OpenAI] = {}
 
 
-def _get_client(endpoint: str, api_key: str) -> AzureOpenAI:
+def _get_client(endpoint: str, api_key: str) -> OpenAI:
     if endpoint not in _clients:
-        _clients[endpoint] = AzureOpenAI(
-            azure_endpoint=endpoint,
+        _clients[endpoint] = OpenAI(
+            base_url=endpoint,
             api_key=api_key,
-            api_version=Config.AZURE_OAI_API_VERSION,
         )
     return _clients[endpoint]
 
