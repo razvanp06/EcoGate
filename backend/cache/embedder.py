@@ -26,23 +26,23 @@ logger = logging.getLogger(__name__)
 # os.environ.get("...") citeste variabilele de mediu (env vars).
 # Cheile Azure NU se pun niciodata hardcodat in cod — sunt in env vars.
 # -------------------------------------------------------------------
-_endpoint = os.environ.get("SWEDEN_ENDPOINT", "")
-_key = os.environ.get("SWEDEN_KEY", "")
+_endpoint = os.environ.get("AZURE_EMBEDDING_ENDPOINT", "")
+_key = os.environ.get("AZURE_EMBEDDING_KEY", "")
+_api_version = os.environ.get("AZURE_EMBEDDING_API_VERSION", "2023-05-15")
+_EMBEDDING_MODEL = os.environ.get("AZURE_EMBEDDING_DEPLOYMENT", "text-embedding-ada-002")
 
 print(f"[EMBEDDER] ===== INIT =====")
 print(f"[EMBEDDER] Endpoint: {_endpoint or 'MISSING!'}")
 print(f"[EMBEDDER] API Key: {'SET (' + _key[:8] + '...)' if _key else 'MISSING!'}")
+print(f"[EMBEDDER] Deployment: {_EMBEDDING_MODEL}")
+print(f"[EMBEDDER] API version: {_api_version}")
 
 _client = AzureOpenAI(
     azure_endpoint=_endpoint,
     api_key=_key,
-    api_version="2024-02-01",
+    api_version=_api_version,
 )
 
-# Modelul de embedding — nu schimba asta, "large" e de 5x mai scump fara beneficiu
-_EMBEDDING_MODEL = "text-embedding-3-small"
-
-print(f"[EMBEDDER] Model: {_EMBEDDING_MODEL}")
 print(f"[EMBEDDER] Client gata de folosit.")
 print(f"[EMBEDDER] ================")
 
