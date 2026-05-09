@@ -9,6 +9,9 @@ class Config:
     AZURE_OAI_API_VERSION: str = os.environ.get("AZURE_OAI_API_VERSION", "2024-02-01")
     ELECTRICITY_MAPS_KEY: str = os.environ.get("ELECTRICITY_MAPS_KEY", "")
 
+    PINECONE_API_KEY: str = os.environ.get("PINECONE_API_KEY", "")
+    PINECONE_INDEX_HOST: str = os.environ.get("PINECONE_INDEX_HOST", "")
+
     @classmethod
     def validate(cls) -> list[str]:
         """Returns a list of missing required env vars. Empty = all good."""
