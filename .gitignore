@@ -1,0 +1,11 @@
+backend/local.settings.json
+backend/__pycache__/
+backend/**/__pycache__/
+backend/.python_packages/
+*.pyc
+.env
+.env.*
+/tmp/
+frontend/node_modules/
+frontend/dist/
+frontend/.env.local

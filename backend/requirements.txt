@@ -1,0 +1,5 @@
+azure-functions
+openai>=1.0.0
+tiktoken
+httpx
+chromadb>=0.4.0
