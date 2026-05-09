@@ -1,9 +1,12 @@
 from __future__ import annotations
+import logging
 import uuid
 from collections import deque
 from dataclasses import dataclass, asdict
 from datetime import datetime, timezone
 from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -41,6 +44,10 @@ def enqueue(
         result=None,
     )
     _queue.append(job)
+    logger.info(
+        "Enqueued job %s (carbon=%.0fg/kWh at queue, defer_until=%s, queue_size=%d)",
+        job.job_id, carbon_intensity, defer_until, len(_queue),
+    )
     return job.job_id
 
 
@@ -51,17 +58,22 @@ def get_all_jobs() -> list[DeferredJob]:
 def get_ready_jobs() -> list[DeferredJob]:
     """Queued jobs whose defer_until has passed — ready to run now."""
     now = datetime.now(timezone.utc)
-    return [
+    ready = [
         j for j in _queue
         if j.status == "queued" and datetime.fromisoformat(j.defer_until) <= now
     ]
+    if ready:
+        logger.info("get_ready_jobs: %d job(s) ready to run", len(ready))
+    return ready
 
 
 def mark_processing(job_id: str) -> bool:
     for j in _queue:
         if j.job_id == job_id:
             j.status = "processing"
+            logger.info("Job %s -> processing", job_id)
             return True
+    logger.warning("mark_processing: job_id %s not found", job_id)
     return False
 
 
@@ -70,5 +82,7 @@ def mark_done(job_id: str, result: str) -> bool:
         if j.job_id == job_id:
             j.status = "done"
             j.result = result
+            logger.info("Job %s -> done (result_len=%d)", job_id, len(result))
             return True
+    logger.warning("mark_done: job_id %s not found", job_id)
     return False

@@ -1,5 +1,7 @@
 from __future__ import annotations
 import os
+import logging
+import time
 from datetime import datetime, timezone, timedelta
 from typing import Optional
 
@@ -8,6 +10,8 @@ from shared.models import RoutingDecision
 from scheduler.complexity_router import classify_complexity, MODEL_FOR_TIER
 from scheduler.carbon_client import get_carbon_intensity, FALLBACK_CARBON_INTENSITY
 from scheduler.deferred_queue import enqueue
+
+logger = logging.getLogger(__name__)
 
 AVAILABLE_REGIONS = ["swedencentral", "eastus2"]
 
@@ -74,6 +78,13 @@ def get_routing_decision(prompt: str, urgency: str) -> RoutingDecision:
     Stage 3 (complexity) + Stage 4 (carbon-aware routing & deferral).
     Never raises — falls back to historical carbon averages if the API is down.
     """
+    t_start = time.perf_counter()
+    preview = prompt if len(prompt) <= 80 else prompt[:77] + "..."
+    logger.info(
+        "Routing request — urgency=%s prompt_len=%d :: %s",
+        urgency, len(prompt), preview,
+    )
+
     # Stage 3: complexity → model tier
     tier = classify_complexity(prompt)
     model = MODEL_FOR_TIER[tier]
@@ -86,6 +97,13 @@ def get_routing_decision(prompt: str, urgency: str) -> RoutingDecision:
         intensities[region] = intensity
         sources[region] = source
 
+    logger.info(
+        "Carbon snapshot — %s",
+        "  ".join(
+            f"{r}={intensities[r]:.0f}g/kWh({sources[r]})" for r in AVAILABLE_REGIONS
+        ),
+    )
+
     # Pick greenest region (every region exposes both model tiers)
     best_region = min(intensities, key=intensities.get)
     best_intensity = intensities[best_region]
@@ -95,18 +113,37 @@ def get_routing_decision(prompt: str, urgency: str) -> RoutingDecision:
 
     config = REGION_CONFIG[best_region]
     endpoint = os.environ.get(config["endpoint_env"], "")
+    if not endpoint:
+        logger.warning(
+            "Endpoint env var %s is empty — orchestrator will fail to call %s",
+            config["endpoint_env"], best_region,
+        )
 
     # Defer if batch + dirty grid
     defer, defer_until = _should_defer(urgency, best_intensity)
     if defer:
-        enqueue(
+        job_id = enqueue(
             prompt=prompt,
             system_prompt=None,
             defer_until=defer_until,
             carbon_intensity=best_intensity,
         )
+        logger.info(
+            "DEFERRED: job_id=%s region=%s carbon=%.0fg/kWh defer_until=%s",
+            job_id, best_region, best_intensity, defer_until,
+        )
 
     reason = _build_reason(tier, model, best_region, best_intensity, sources, defer)
+    elapsed_ms = (time.perf_counter() - t_start) * 1000
+
+    if not defer:
+        savings_pct = (1 - best_intensity / baseline_intensity) * 100 if baseline_intensity else 0.0
+        logger.info(
+            "Decision: model=%s region=%s carbon=%.0fg/kWh "
+            "(vs %.0f baseline, %.0f%% saved) tier=%d (%.0fms total)",
+            model, best_region, best_intensity, baseline_intensity,
+            savings_pct, tier, elapsed_ms,
+        )
 
     return RoutingDecision(
         model=model,
