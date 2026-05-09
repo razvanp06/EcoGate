@@ -1,4 +1,5 @@
 backend/local.settings.json
+backend/.venv/
 backend/__pycache__/
 backend/**/__pycache__/
 backend/.python_packages/
