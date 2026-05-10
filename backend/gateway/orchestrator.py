@@ -7,8 +7,7 @@ from typing import Optional
 import tiktoken
 from openai import OpenAI
 
-from shared.models import GatewayRequest, GatewayResponse, GreenReceipt
-from shared.config import Config
+from shared.models import GatewayRequest, GatewayResponse
 from gateway.receipt import build_receipt
 from gateway.storage import append_receipt
 from cache.cache_service import check_cache, store_in_cache
@@ -43,14 +42,18 @@ def _call_model(
     """Returns (response_text, total_tokens_used)."""
     client = _get_client(endpoint, api_key)
     messages = []
-    if system_prompt:
+    # o4-mini doesn't support system prompts
+    if system_prompt and model != "o4-mini":
         messages.append({"role": "system", "content": system_prompt})
     messages.append({"role": "user", "content": prompt})
+
+    # o4-mini spends tokens on internal reasoning before producing visible output
+    effective_max = max_tokens * 6 if model == "o4-mini" else max_tokens
 
     completion = client.chat.completions.create(
         model=model,
         messages=messages,
-        max_completion_tokens=max_tokens,
+        max_completion_tokens=effective_max,
     )
     text = completion.choices[0].message.content or ""
     total_tokens = completion.usage.total_tokens if completion.usage else len(_encoder.encode(text))

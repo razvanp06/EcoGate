@@ -8,7 +8,7 @@ class GatewayRequest:
     prompt: str
     urgency: str = "realtime"          # "realtime" | "batch"
     system_prompt: Optional[str] = None
-    max_tokens: int = 500
+    max_tokens: int = 2000
 
 
 @dataclass
