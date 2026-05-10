@@ -1,7 +1,6 @@
 from __future__ import annotations
 import logging
 import os
-import uuid
 from typing import Optional
 
 import tiktoken
@@ -103,7 +102,7 @@ def handle_request(request: GatewayRequest) -> GatewayResponse:
         return GatewayResponse(
             response=None,
             green_receipt=receipt,
-            job_id=str(uuid.uuid4()),
+            job_id=routing.job_id,
             status="queued",
         )
 

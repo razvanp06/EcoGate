@@ -39,6 +39,9 @@ class RoutingDecision:
     carbon_intensity: float
     carbon_intensity_baseline: float
     routing_reason: str
+    # Set by the scheduler when defer=True so the orchestrator can return the
+    # same job_id the worker will use when draining the deferred queue.
+    job_id: Optional[str] = None
 
 
 @dataclass

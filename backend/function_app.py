@@ -6,6 +6,8 @@ import azure.functions as func
 
 from gateway.orchestrator import handle_request
 from gateway.storage import get_recent_receipts
+from scheduler.deferred_queue import get_all_jobs
+from scheduler.worker import process_ready_jobs
 from shared.models import GatewayRequest
 from shared.config import Config
 
@@ -85,6 +87,51 @@ def receipts(req: func.HttpRequest) -> func.HttpResponse:
     data = get_recent_receipts(n)
     return func.HttpResponse(
         json.dumps({"receipts": data}),
+        status_code=200,
+        headers=_CORS_HEADERS,
+    )
+
+
+@app.route(route="jobs", methods=["GET", "OPTIONS"])
+def jobs(req: func.HttpRequest) -> func.HttpResponse:
+    """Expose the deferred-job queue so the dashboard can show pending work."""
+    if req.method == "OPTIONS":
+        return func.HttpResponse(status_code=204, headers=_CORS_HEADERS)
+
+    data = [j.to_dict() for j in get_all_jobs()]
+    return func.HttpResponse(
+        json.dumps({"jobs": data}),
+        status_code=200,
+        headers=_CORS_HEADERS,
+    )
+
+
+# Drain the deferred queue every 30 seconds.
+# NCRONTAB format: {sec} {min} {hour} {day} {month} {dow}
+@app.timer_trigger(
+    schedule="*/30 * * * * *",
+    arg_name="timer",
+    run_on_startup=False,
+    use_monitor=False,
+)
+def deferred_worker(timer: func.TimerRequest) -> None:
+    try:
+        completed = process_ready_jobs()
+        if completed:
+            logger.info("Deferred worker tick: completed %d job(s)", completed)
+    except Exception:
+        logger.exception("Deferred worker tick crashed")
+
+
+@app.route(route="jobs/process", methods=["POST", "OPTIONS"])
+def process_jobs_now(req: func.HttpRequest) -> func.HttpResponse:
+    """Manual trigger — useful for the demo when you don't want to wait for the timer."""
+    if req.method == "OPTIONS":
+        return func.HttpResponse(status_code=204, headers=_CORS_HEADERS)
+
+    completed = process_ready_jobs()
+    return func.HttpResponse(
+        json.dumps({"completed": completed}),
         status_code=200,
         headers=_CORS_HEADERS,
     )

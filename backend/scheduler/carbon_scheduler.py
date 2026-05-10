@@ -121,6 +121,7 @@ def get_routing_decision(prompt: str, urgency: str) -> RoutingDecision:
 
     # Defer if batch + dirty grid
     defer, defer_until = _should_defer(urgency, best_intensity)
+    job_id: Optional[str] = None
     if defer:
         job_id = enqueue(
             prompt=prompt,
@@ -156,4 +157,5 @@ def get_routing_decision(prompt: str, urgency: str) -> RoutingDecision:
         carbon_intensity=best_intensity,
         carbon_intensity_baseline=baseline_intensity,
         routing_reason=reason,
+        job_id=job_id,
     )
