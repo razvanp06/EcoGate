@@ -70,8 +70,8 @@ class GreenReceipt:
     # SCI — Green Software Foundation formula: SCI = (E * I + M) / R
     energy_kwh: float
     gco2_this_request: float    # gCO₂
-    gco2_baseline: float        # gCO₂ — what gpt-4o in eastus would have cost
-    gco2_saved: float           # gCO₂ — can be negative, never hide it
+    gco2_baseline: float        # gCO₂ — what gpt-4o at avg API region (300 gCO₂/kWh) would cost
+    gco2_saved: float           # gCO₂ — floored at 0 (never negative in UI)
     sci_score: float            # gCO₂ per request
 
     savings_pct: float

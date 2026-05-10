@@ -58,7 +58,7 @@ def gateway(req: func.HttpRequest) -> func.HttpResponse:
         prompt=prompt,
         urgency=body.get("urgency", "realtime"),
         system_prompt=body.get("system_prompt"),
-        max_tokens=int(body.get("max_tokens", 500)),
+        max_tokens=int(body.get("max_tokens", 2000)),
     )
 
     try:
