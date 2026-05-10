@@ -101,7 +101,7 @@ def get_routing_decision(prompt: str, urgency: str) -> RoutingDecision:
     )
 
     # Pick greenest region (every region exposes both model tiers)
-    best_region = min(intensities, key=intensities.get)
+    best_region = min(intensities, key=lambda r: intensities[r])
     best_intensity = intensities[best_region]
     baseline_intensity = intensities.get(
         "eastus2", FALLBACK_CARBON_INTENSITY["eastus2"]
@@ -119,6 +119,7 @@ def get_routing_decision(prompt: str, urgency: str) -> RoutingDecision:
     defer, defer_until = _should_defer(urgency, best_intensity)
     job_id: Optional[str] = None
     if defer:
+        assert defer_until is not None
         job_id = enqueue(
             prompt=prompt,
             system_prompt=None,
