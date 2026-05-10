@@ -13,12 +13,12 @@ interface Props {
 export default function SavingsCounter({ stats }: Props) {
   const { totalSaved, totalPct, cacheHits, count } = stats;
   const avgSavingsPct = count ? totalPct / count : 0;
-  const kmEquivalent = (totalSaved / 0.12).toFixed(1);
+  const googleSearches = Math.round(totalSaved / 0.2);
 
   return (
     <div className="h-full rounded-xl border-2 border-green-500 bg-slate-800 p-5 flex flex-col justify-between">
       <p className="text-slate-400 text-xs uppercase tracking-widest font-medium">
-        CO₂ Avoided This Session
+        CO₂ Saved vs. Direct API Calls
       </p>
 
       <div>
@@ -27,13 +27,13 @@ export default function SavingsCounter({ stats }: Props) {
           <span className="text-2xl ml-2 text-green-500">gCO₂</span>
         </p>
         <p className="text-slate-400 text-sm mt-1">
-          ≈ {kmEquivalent} km driven by an average car
+          ≈ {googleSearches} Google {googleSearches === 1 ? "search" : "searches"} equivalent
         </p>
       </div>
 
       <div className="grid grid-cols-3 gap-2">
         <Chip label="Requests" value={String(count)} />
-        <Chip label="Avg Saved" value={`${avgSavingsPct.toFixed(1)}%`} />
+        <Chip label="Avg Reduction" value={`${avgSavingsPct.toFixed(1)}%`} />
         <Chip label="Cache Hits" value={String(cacheHits)} />
       </div>
     </div>

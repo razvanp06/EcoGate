@@ -37,8 +37,11 @@ def _call_model(
     endpoint: str,
     api_key: str,
     max_tokens: int,
-) -> tuple[str, int]:
-    """Returns (response_text, total_tokens_used)."""
+) -> tuple[str, int, int]:
+    """Returns (response_text, total_tokens_used, reasoning_tokens).
+    reasoning_tokens is the hidden chain-of-thought token count (o4-mini only).
+    It must be excluded from the baseline comparison — gpt-4o has no reasoning overhead.
+    """
     client = _get_client(endpoint, api_key)
     messages = []
     # o4-mini doesn't support system prompts
@@ -56,7 +59,12 @@ def _call_model(
     )
     text = completion.choices[0].message.content or ""
     total_tokens = completion.usage.total_tokens if completion.usage else len(_encoder.encode(text))
-    return text, total_tokens
+
+    reasoning_tokens = 0
+    if completion.usage and completion.usage.completion_tokens_details:
+        reasoning_tokens = getattr(completion.usage.completion_tokens_details, "reasoning_tokens", 0) or 0
+
+    return text, total_tokens, reasoning_tokens
 
 
 def handle_request(request: GatewayRequest) -> GatewayResponse:
@@ -108,7 +116,7 @@ def handle_request(request: GatewayRequest) -> GatewayResponse:
 
     # ── Model call ────────────────────────────────────────────────────────────
     api_key = os.environ.get(routing.api_key_env, "")
-    response_text, total_tokens = _call_model(
+    response_text, total_tokens, reasoning_tokens = _call_model(
         prompt=compression.compressed_prompt,
         system_prompt=request.system_prompt,
         model=routing.model,
@@ -126,6 +134,7 @@ def handle_request(request: GatewayRequest) -> GatewayResponse:
         compression=compression,
         routing=routing,
         total_tokens=total_tokens,
+        reasoning_tokens=reasoning_tokens,
         original_prompt_tokens=original_tokens,
     )
     append_receipt(receipt)

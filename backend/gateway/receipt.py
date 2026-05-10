@@ -22,7 +22,9 @@ _DEFAULT_ENERGY_FACTOR = 0.00090
 EMBODIED_CARBON_G = 0.001
 
 BASELINE_MODEL = "gpt-4o"
-BASELINE_REGION_INTENSITY = 380.0   # gCO₂/kWh — East US 2 (PJM) historical average
+# Weighted average of OpenAI/Anthropic primary API regions (US-East ~320, EU-West ~250, US-West ~100)
+# Represents a typical direct API call with no green routing — not a worst-case scenario.
+BASELINE_REGION_INTENSITY = 300.0   # gCO₂/kWh
 
 
 def _energy_kwh(model: str, total_tokens: int) -> float:
@@ -32,18 +34,23 @@ def _energy_kwh(model: str, total_tokens: int) -> float:
 
 def calculate_sci(
     model: str,
-    total_tokens: int,
+    actual_tokens: int,
     carbon_intensity: float,
+    baseline_tokens: int | None = None,
 ) -> tuple[float, float, float]:
     """
     Returns (energy_kwh, gco2_this_request, gco2_baseline).
     SCI formula: (E * I + M) / R  where R = 1 request.
-    Units: energy in kWh, carbon in gCO₂.
+    baseline_tokens should be original_prompt_tokens + output_tokens so that
+    compression savings are reflected in the baseline comparison.
     """
-    e = _energy_kwh(model, total_tokens)
+    if baseline_tokens is None:
+        baseline_tokens = actual_tokens
+
+    e = _energy_kwh(model, actual_tokens)
     gco2 = e * carbon_intensity + EMBODIED_CARBON_G
 
-    e_base = _energy_kwh(BASELINE_MODEL, total_tokens)
+    e_base = _energy_kwh(BASELINE_MODEL, baseline_tokens)
     gco2_base = e_base * BASELINE_REGION_INTENSITY + EMBODIED_CARBON_G
 
     return e, gco2, gco2_base
@@ -56,6 +63,7 @@ def build_receipt(
     routing: Optional[RoutingDecision],
     total_tokens: int,
     original_prompt_tokens: int,
+    reasoning_tokens: int = 0,
 ) -> GreenReceipt:
     """
     Assembles a GreenReceipt from all pipeline stage outputs.
@@ -106,10 +114,18 @@ def build_receipt(
     assert compression is not None
     assert routing is not None
 
+    # Baseline = what the user would have spent calling gpt-4o directly:
+    #   original (uncompressed) prompt + visible output only.
+    #   reasoning_tokens are o4-mini's hidden chain-of-thought — gpt-4o has no
+    #   equivalent overhead, so they must be excluded from the baseline.
+    visible_output_tokens = max(0, total_tokens - compression.compressed_tokens - reasoning_tokens)
+    baseline_total_tokens = compression.original_tokens + visible_output_tokens
+
     e, gco2, gco2_base = calculate_sci(
-        routing.model, total_tokens, routing.carbon_intensity
+        routing.model, total_tokens, routing.carbon_intensity,
+        baseline_tokens=baseline_total_tokens,
     )
-    gco2_saved = gco2_base - gco2
+    gco2_saved = max(0.0, gco2_base - gco2)
     savings_pct = (gco2_saved / gco2_base * 100) if gco2_base > 0 else 0.0
 
     return GreenReceipt(

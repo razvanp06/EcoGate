@@ -54,10 +54,12 @@ export default function ReceiptCard({ receipt }: Props) {
 
       {/* Line 3 — numbers */}
       <p className="text-slate-400 text-xs tabular-nums">
-        {receipt.gco2_this_request.toFixed(4)} gCO₂
-        {" · "}saved {receipt.savings_pct.toFixed(0)}%{" · "}
-        {receipt.original_tokens}→{receipt.compressed_tokens} tokens (
-        {compressionSaved}% compressed)
+        <span className="text-green-400 font-medium">
+          ↓{receipt.savings_pct.toFixed(0)}% carbon
+        </span>
+        {" vs. avg. API call · "}
+        {receipt.gco2_saved.toFixed(4)} gCO₂ saved
+        {compressionSaved !== "0" && ` · ${compressionSaved}% prompt compressed`}
       </p>
 
       {/* Line 4 — timestamp */}

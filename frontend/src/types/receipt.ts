@@ -28,7 +28,7 @@ export interface GreenReceipt {
   // SCI Calculation (Green Software Foundation formula: SCI = E×I + M)
   energy_kwh: number;         // energy consumed: token_count × model_energy_factor
   gco2_this_request: number;  // actual CO₂ cost: energy_kwh × carbon_intensity + embodied
-  gco2_baseline: number;      // what gpt-4o in eastus would have cost (worst-case baseline)
+  gco2_baseline: number;      // what gpt-4o at avg API region intensity (300 gCO₂/kWh) would cost
   gco2_saved: number;         // gco2_baseline - gco2_this_request (EcoGateway's saving)
   sci_score: number;          // formal SCI score in gCO₂ per request
 
