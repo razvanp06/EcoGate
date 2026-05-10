@@ -61,7 +61,34 @@ export default function RouteBreakdown({ receipts }: Props) {
                 cx="50%"
                 cy="50%"
                 outerRadius={80}
-                label
+                labelLine={false}
+                label={({
+                  cx,
+                  cy,
+                  midAngle,
+                  innerRadius,
+                  outerRadius,
+                  value,
+                }) => {
+                  const RADIAN = Math.PI / 180;
+                  const radius =
+                    innerRadius + (outerRadius - innerRadius) * 0.5;
+                  const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                  const y = cy + radius * Math.sin(-midAngle * RADIAN);
+                  return (
+                    <text
+                      x={x}
+                      y={y}
+                      fill="white"
+                      textAnchor="middle"
+                      dominantBaseline="central"
+                      fontSize={13}
+                      fontWeight="bold"
+                    >
+                      {value}
+                    </text>
+                  );
+                }}
               >
                 {data.map((entry) => (
                   <Cell
@@ -79,8 +106,10 @@ export default function RouteBreakdown({ receipts }: Props) {
                   background: "#1e293b",
                   border: "1px solid #334155",
                   borderRadius: 8,
+                  color: "#f1f5f9",
                 }}
-                labelStyle={{ color: "#94a3b8" }}
+                labelStyle={{ color: "#f1f5f9" }}
+                itemStyle={{ color: "#f1f5f9" }}
               />
               <Legend wrapperStyle={{ color: "#94a3b8", fontSize: 13 }} />
             </PieChart>
