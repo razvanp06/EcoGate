@@ -58,6 +58,7 @@ overhead, so including them would inflate savings artificially.
 | Complexity routing | Tier-1 (o4-mini) produces shorter answers; reserved for prompts the classifier scores as simple |
 | Prompt compression | Filler/politeness removal only; code blocks, lists, and structured content are protected |
 | Batch deferral | Up to 2 h latency; only available when caller sets `urgency=batch` |
+| Green region routing | swedencentral (~20–30 ms from Central/Eastern Europe) is actually faster than eastus2 (~100–120 ms) for European users; latency penalty only applies to US-based callers who would otherwise hit a local US endpoint |
 | Gateway overhead | ~100–200 ms per request (embedding + cache lookup + routing) |
 
 ---
