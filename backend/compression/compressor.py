@@ -32,12 +32,10 @@ def _restore_code_blocks(text: str, placeholders: dict) -> str:
 	return text
 
 RULES = [
-	("strip_diacritics", strip_diacritics),
 	("normalize_whitespace", normalize_whitespace),
 	("remove_filler_phrases", remove_filler_phrases),
 	("remove_redundant_politeness", remove_redundant_politeness),
 	("deduplicate_context", deduplicate_context),
-	("compress_lists", compress_lists),
 	("fix_artifacts", fix_artifacts),
 	("normalize_whitespace", normalize_whitespace),
 ]

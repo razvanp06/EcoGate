@@ -64,9 +64,11 @@ def build_receipt(
     now = datetime.now(timezone.utc).isoformat()
 
     if cache_result.hit:
-        # Cache hit: no model call, no compression ran
+        # Cache hit: no model call, no compression ran.
+        # Baseline assumes a typical full call: prompt + estimated output tokens.
+        estimated_total_tokens = original_prompt_tokens + 200
         e, gco2, gco2_base = calculate_sci(
-            BASELINE_MODEL, original_prompt_tokens, BASELINE_REGION_INTENSITY
+            BASELINE_MODEL, estimated_total_tokens, BASELINE_REGION_INTENSITY
         )
         # We saved everything — embodied carbon is all we "spent"
         gco2_spent = EMBODIED_CARBON_G
