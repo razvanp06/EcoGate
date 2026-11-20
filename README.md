@@ -1,11 +1,6 @@
 # EcoGate
 Sustainability-aware proxy for LLM APIs. Combines semantic caching, rule-based prompt compression, and carbon-aware routing to cut tokens by 20–40% and minimize CO₂ per request — with a transparent green receipt on every response.
 
-# FrostFlow
-
-FrostFlow is a sustainability-aware proxy for LLM APIs that reduces the
-energy and carbon footprint of AI inference through a four-stage pipeline.
-
 ## Pipeline
 
 1. **Semantic Cache** — incoming prompts are checked against a vector
