@@ -3,6 +3,6 @@ fastapi
 openai>=1.0.0
 tiktoken
 httpx
-sentence-transformers>=2.2.0
+fastembed>=0.4.0
 numpy
 pinecone>=3.0.0

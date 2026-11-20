@@ -6,11 +6,10 @@ from pathlib import Path
 from typing import Optional
 
 import numpy as np
-from sentence_transformers import SentenceTransformer
+from shared.embeddings import MODEL_NAME as EMBEDDING_MODEL_NAME, encode, encode_one
 
 logger = logging.getLogger(__name__)
 
-EMBEDDING_MODEL_NAME = "all-MiniLM-L6-v2"
 TRAINING_DATA_PATH = Path(__file__).parent / "training_data.json"
 
 # Bias toward the cheap model: tier 2 only when complex-similarity beats
@@ -22,7 +21,6 @@ MODEL_FOR_TIER = {
     2: "gpt-4o",
 }
 
-_model: Optional[SentenceTransformer] = None
 _simple_embs: Optional[np.ndarray] = None
 _complex_embs: Optional[np.ndarray] = None
 _training_data: Optional[dict] = None
@@ -44,20 +42,14 @@ def _load_training_data() -> dict:
 def _ensure_initialized() -> None:
     """Lazy-load the embedding model and pre-compute example embeddings.
     Runs once per process."""
-    global _model, _simple_embs, _complex_embs
-    if _model is not None:
+    global _simple_embs, _complex_embs
+    if _simple_embs is not None:
         return
 
     data = _load_training_data()
-    logger.info("Loading sentence-transformer '%s' (cold start)", EMBEDDING_MODEL_NAME)
     t0 = time.perf_counter()
-    _model = SentenceTransformer(EMBEDDING_MODEL_NAME)
-    _simple_embs = _model.encode(
-        data["simple"], normalize_embeddings=True, show_progress_bar=False
-    )
-    _complex_embs = _model.encode(
-        data["complex"], normalize_embeddings=True, show_progress_bar=False
-    )
+    _simple_embs = encode(data["simple"])
+    _complex_embs = encode(data["complex"])
     logger.info(
         "Model ready in %.2fs (%d simple + %d complex example embeddings cached)",
         time.perf_counter() - t0,
@@ -76,7 +68,7 @@ def score_prompt(prompt: str) -> dict:
     Used for logging and demo explainability."""
     _ensure_initialized()
     t0 = time.perf_counter()
-    prompt_emb = _model.encode(prompt, normalize_embeddings=True, show_progress_bar=False)
+    prompt_emb = encode_one(prompt)
 
     sim_simple = _cosine_similarities(prompt_emb, _simple_embs)
     sim_complex = _cosine_similarities(prompt_emb, _complex_embs)
@@ -120,7 +112,7 @@ if __name__ == "__main__":
         format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
     )
     # Silence noisy third-party libraries during self-tests
-    for noisy in ("sentence_transformers", "httpx", "urllib3", "filelock", "huggingface_hub"):
+    for noisy in ("fastembed", "httpx", "urllib3", "filelock", "huggingface_hub"):
         logging.getLogger(noisy).setLevel(logging.WARNING)
 
     data = _load_training_data()
