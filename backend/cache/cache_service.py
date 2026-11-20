@@ -18,7 +18,11 @@ def check_cache(prompt: str) -> CacheResult:
         logger.error("Embedding failed, treating as cache miss: %s", exc)
         return CacheResult(hit=False, response=None, similarity=0.0)
 
-    results = query_store(embedding, n_results=1)
+    try:
+        results = query_store(embedding, n_results=1)
+    except Exception as exc:
+        logger.error("Vector store query failed, treating as cache miss: %s", exc)
+        return CacheResult(hit=False, response=None, similarity=0.0)
 
     if not results.matches:
         return CacheResult(hit=False, response=None, similarity=0.0)
@@ -38,8 +42,12 @@ def check_cache(prompt: str) -> CacheResult:
 def store_in_cache(prompt: str, response: str) -> None:
     cache_key = hashlib.md5(prompt.strip().lower().encode()).hexdigest()
 
-    if key_exists(cache_key):
-        logger.debug("Prompt already cached (key=%s), skipping.", cache_key)
+    try:
+        if key_exists(cache_key):
+            logger.debug("Prompt already cached (key=%s), skipping.", cache_key)
+            return
+    except Exception as exc:
+        logger.error("store_in_cache: vector store unavailable, not storing: %s", exc)
         return
 
     try:

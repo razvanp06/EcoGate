@@ -5,13 +5,21 @@ from pinecone import Pinecone
 
 logger = logging.getLogger(__name__)
 
-_api_key = os.environ.get("PINECONE_API_KEY", "")
-_index_host = os.environ.get("PINECONE_INDEX_HOST", "")
+_index = None
 
-_pc = Pinecone(api_key=_api_key)
-_index = _pc.Index(host=_index_host)
 
-logger.info("Pinecone index connected: %s", _index_host)
+def _get_index():
+    """Connect lazily so a missing/invalid Pinecone config degrades to cache
+    misses instead of crashing the whole app at import time."""
+    global _index
+    if _index is None:
+        api_key = os.environ.get("PINECONE_API_KEY", "")
+        index_host = os.environ.get("PINECONE_INDEX_HOST", "")
+        if not api_key or not index_host:
+            raise RuntimeError("PINECONE_API_KEY / PINECONE_INDEX_HOST not set")
+        _index = Pinecone(api_key=api_key).Index(host=index_host)
+        logger.info("Pinecone index connected: %s", index_host)
+    return _index
 
 
 def add_to_store(
@@ -23,7 +31,7 @@ def add_to_store(
 ) -> None:
     logger.debug("Pinecone upsert: key=%s prompt=%r", cache_key, prompt[:60])
     start = time.perf_counter()
-    _index.upsert(vectors=[{
+    _get_index().upsert(vectors=[{
         "id": cache_key,
         "values": embedding,
         "metadata": {
@@ -37,7 +45,7 @@ def add_to_store(
 
 def query_store(embedding: list[float], n_results: int = 1):
     start = time.perf_counter()
-    results = _index.query(
+    results = _get_index().query(
         vector=embedding,
         top_k=n_results,
         include_metadata=True,
@@ -49,5 +57,5 @@ def query_store(embedding: list[float], n_results: int = 1):
 
 
 def key_exists(cache_key: str) -> bool:
-    result = _index.fetch(ids=[cache_key])
+    result = _get_index().fetch(ids=[cache_key])
     return len(result.vectors) > 0

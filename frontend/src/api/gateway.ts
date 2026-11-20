@@ -20,9 +20,22 @@ import type {
 // only when running the Vite dev server against a separately started backend.
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? "";
 
+// Surface the backend's {error, detail} body instead of a bare status code.
+async function errorFrom(res: Response): Promise<Error> {
+  const text = await res.text().catch(() => "");
+  try {
+    const body = JSON.parse(text);
+    const msg = [body.error, body.detail].filter(Boolean).join(" — ");
+    if (msg) return new Error(`Server error ${res.status}: ${msg}`);
+  } catch {
+    // not JSON (e.g. a platform error page)
+  }
+  return new Error(`Server error ${res.status}${text ? `: ${text.slice(0, 200)}` : ""}`);
+}
+
 export async function fetchReceipts(): Promise<GreenReceipt[]> {
   const res = await fetch(`${BACKEND_URL}/api/receipts`);
-  if (!res.ok) throw new Error(`Server error ${res.status}`);
+  if (!res.ok) throw await errorFrom(res);
   const data: ReceiptsResponse = await res.json();
   return data.receipts;
 }
@@ -33,6 +46,6 @@ export async function sendQuery(req: QueryRequest): Promise<QueryResponse> {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(req),
   });
-  if (!res.ok) throw new Error(`Server error ${res.status}`);
+  if (!res.ok) throw await errorFrom(res);
   return res.json();
 }
