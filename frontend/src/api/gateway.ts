@@ -15,7 +15,10 @@ import type {
   QueryResponse,
 } from "../types/receipt";
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:7071";
+// Empty by default: the browser calls /api/* on the same origin, which Vercel
+// routes to the backend service. Set VITE_BACKEND_URL (e.g. http://localhost:7071)
+// only when running the Vite dev server against a separately started backend.
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? "";
 
 export async function fetchReceipts(): Promise<GreenReceipt[]> {
   const res = await fetch(`${BACKEND_URL}/api/receipts`);

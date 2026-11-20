@@ -1,4 +1,5 @@
 azure-functions
+fastapi
 openai>=1.0.0
 tiktoken
 httpx
